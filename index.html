@@ -191,7 +191,7 @@ footer b{color:var(--lime)}
         <ul class="rows num" id="cuotaRows"></ul>
       </article>
       <article class="total hoy">
-        <p class="label" style="color:var(--mute);opacity:1">Pago para llevárselo hoy</p>
+        <p class="label" style="color:var(--mute);opacity:1">Pago inicial</p>
         <p class="big num" id="hoy">—</p>
         <p class="sub" id="hoySub" style="color:var(--mute);opacity:1"></p>
         <div class="bar" id="hoyBar"></div>
@@ -462,7 +462,7 @@ function update(){
   $('hoySub').textContent = 'De esto, ' + fmt(R.inicial) + ' es la inicial real al vehículo (' + pct(R.inicial / R.PL) + ' del precio).';
   const hl = [['Inicial al vehículo', pct(R.inicial / R.PL) + ' del precio', R.inicial, C2[0]], ['Comisión flat', '5% del monto financiado', R.comision, C2[1]]]
     .concat(FIJOS().map((x, k) => [x[0].replace(' (referencial)', ''), /referencial/.test(x[0]) ? 'Monto referencial' : '', x[1], C2[2 + k]]));
-  $('hoyBar').innerHTML = bar(hl); $('hoyRows').innerHTML = rows(hl, 'Pago para llevárselo', R.llevar);
+  $('hoyBar').innerHTML = bar(hl); $('hoyRows').innerHTML = rows(hl, 'Pago inicial', R.llevar);
   /* datos clave */
   $('facts').innerHTML = [['Precio del vehículo', fmt(R.PL)], ['Monto financiado', fmt(R.fin)], ['Tasa', '24% anual'], ['Total en cuotas', fmt(R.tot.total)]].map(x => `<div><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
   /* comparar plazos */
@@ -478,7 +478,7 @@ $('pdfBtn').addEventListener('click', async () => { if (!st.res) return; $('pdfB
 $('copyBtn').addEventListener('click', async () => {
   const R = st.res, I = st.info; if (!R) return;
   const t = ['Propuesta de financiamiento Llévatelo', I.cliente ? 'Cliente: ' + I.cliente : '', I.vehiculo ? 'Vehículo: ' + I.vehiculo : '', 'Precio: ' + fmt(R.PL),
-    'Pago para llevártelo hoy: ' + fmt(R.llevar) + ' (inicial ' + fmt(R.inicial) + ' + comisión, seguros del primer año, GPS, notaría, revisión de tránsito y Tu Gruero)',
+    'Pago inicial: ' + fmt(R.llevar) + ' (inicial ' + fmt(R.inicial) + ' + comisión, seguros del primer año, GPS, notaría, revisión de tránsito y Tu Gruero)',
     'Cuota mensual: ' + fmt(R.total) + ' x ' + R.n + ' meses', 'Primera cuota: ' + ddmmyyyy(R.rows[0].vence),
     'Propuesta referencial, sujeta a aprobación de crédito.'].filter(Boolean).join('\n');
   try { await navigator.clipboard.writeText(t); say('Resumen copiado. Pégalo en WhatsApp o correo.'); } catch(e) { say('No se pudo copiar automáticamente en este navegador.'); }
