@@ -349,8 +349,9 @@ function buildPdf(R, I){
   const ensure = h => { if (y + h > H - 50){ doc.addPage(); header(); y = 78; } };
   const bullets = (items, x, maxW, size, lh) => { for (const segs of items){ const L = flow(segs, maxW - 10, size); ensure(L.length * lh + 3);
       doc.setFillColor(...INK); doc.circle(x + 2.5, y - size * 0.3, 1.3, 'F'); doc.setTextColor(...INK); y = draw(L, x + 10, y, lh, size) + 3; } };
-  const heading = t => { ensure(60); doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(...BLUE); doc.text(P(t), M, y); y += 8; };
-  const base = {theme: 'plain', margin: {left: M, right: M, top: 78, bottom: 50}, didDrawPage: d => { if (d.pageNumber > 1) header(); }};
+  const heading = (t, est) => { ensure(est || 60); doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(...BLUE); doc.text(P(t), M, y); y += 8; };
+  const base = {theme: 'plain', showFoot: 'lastPage', rowPageBreak: 'avoid', margin: {left: M, right: M, top: 78, bottom: 50}, didDrawPage: d => { if (d.pageNumber > 1) header(); }};
+  const est = (rows, foot) => 30 + (rows + 1 + (foot ? 1 : 0)) * 19;
   const tbl = (head, body, foot) => { doc.autoTable(Object.assign({}, base, {startY: y, head: [head.map(P)], body: body.map(r => r.map(P)), foot: foot ? [foot.map(P)] : undefined,
       styles: {font: 'helvetica', fontSize: 9, textColor: INK, cellPadding: {top: 4, bottom: 4, left: 7, right: 7}, lineColor: [227, 232, 244], lineWidth: {bottom: 0.5}},
       headStyles: {fillColor: BLUE, textColor: 255, fontStyle: 'bold'}, footStyles: {fillColor: [223, 232, 255], textColor: INK, fontStyle: 'bold'},
@@ -370,17 +371,17 @@ function buildPdf(R, I){
   y += 16; doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...INK); doc.text('Importante', M + 12, y); y += 13;
   for (const L of impL){ doc.setFillColor(...INK); doc.circle(M + 14.5, y - 2.5, 1.3, 'F'); y = draw(L, M + 22, y, 10.6, 8.3) + 3; }
   y += 18;
-  heading('Condiciones de la operación'); tbl(['Concepto', 'Valor'], T.cond);
-  heading('Lo que pagas para llevarte el vehículo'); tbl(['Concepto', 'Monto'], T.pago, ['Total para llevarte el vehículo', fmt(R.llevar)]);
-  heading('Tu cuota mensual'); tbl(['Concepto', 'Monto'], T.cuota, ['Cuota mensual total', fmt(R.total)]);
-  heading('Cómo leer tu tabla de amortización'); y += 6; bullets(T.leer, M, CW, 8.6, 11.2);
+  heading('Condiciones de la operación', est(T.cond.length)); tbl(['Concepto', 'Valor'], T.cond);
+  heading('Lo que pagas para llevarte el vehículo', est(T.pago.length, 1)); tbl(['Concepto', 'Monto'], T.pago, ['Total para llevarte el vehículo', fmt(R.llevar)]);
+  heading('Tu cuota mensual', est(T.cuota.length, 1)); tbl(['Concepto', 'Monto'], T.cuota, ['Cuota mensual total', fmt(R.total)]);
+  heading('Cómo leer tu tabla de amortización', 140); y += 6; bullets(T.leer, M, CW, 8.6, 11.2);
 
   doc.addPage(); header(); y = 88;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(...BLUE); doc.text(P('Tabla de amortización - ' + R.n + (R.n === 1 ? ' mes' : ' meses')), M, y); y += 15;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...INK);
   doc.text(P('Monto financiado ' + fmt(R.fin) + ' · Tasa anual 24% · ' + R.n + ' cuotas · Cuota mensual total ' + fmt(R.total)), M, y); y += 10;
   doc.autoTable(Object.assign({}, base, {startY: y, head: [AMH.map(P)], body: R.rows.map(r => amRow(r).map(v => P(v))), foot: [amFoot(R)],
-    styles: {font: 'helvetica', fontSize: 7, textColor: INK, halign: 'right', cellPadding: {top: 2.2, bottom: 2.2, left: 3, right: 3}, lineColor: [227, 232, 244], lineWidth: {bottom: 0.4}},
+    styles: {font: 'helvetica', fontSize: 6.8, textColor: INK, halign: 'right', cellPadding: {top: 1.7, bottom: 1.7, left: 3, right: 3}, lineColor: [227, 232, 244], lineWidth: {bottom: 0.4}},
     headStyles: {fillColor: BLUE, textColor: 255, fontStyle: 'bold', halign: 'right', valign: 'middle'}, footStyles: {fillColor: [223, 232, 255], textColor: INK, fontStyle: 'bold', halign: 'right'},
     alternateRowStyles: {fillColor: [245, 248, 255]}, didParseCell: d => { if (d.column.index < 2) d.cell.styles.halign = 'center'; }}));
   y = doc.lastAutoTable.finalY + 14;
