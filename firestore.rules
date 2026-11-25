@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function email() { return request.auth.token.email.lower(); }
+    function verified() { return request.auth.token.email_verified == true; }
+    function isSuper() { return signedIn() && verified() && email() == 'luis@llevatelo.com.ve'; }
+    function isAdmin() { return isSuper() || (signedIn() && verified() && exists(/databases/$(database)/documents/admins/$(email()))); }
+    function isApproved() {
+      return signedIn() && exists(/databases/$(database)/documents/dealers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/dealers/$(request.auth.uid)).data.estado == 'aprobado';
+    }
+
+    // Administradores: documento por correo (en minúsculas)
+    match /admins/{adminEmail} {
+      allow read: if signedIn() && (isAdmin() || adminEmail == email());
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Concesionarios: un documento por usuario
+    match /dealers/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.estado == 'pendiente'
+        && request.resource.data.email == request.auth.token.email;
+      // El concesionario puede editar sus datos, pero no su estado
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == uid
+        && request.resource.data.estado == resource.data.estado);
+      allow delete: if isAdmin();
+    }
+
+    // Propuestas de financiamiento
+    match /propuestas/{id} {
+      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if (isApproved() || isAdmin()) && request.resource.data.uid == request.auth.uid
+        && request.resource.data.estado == 'enviada';
+      // Llévatelo cambia el estado; el concesionario solo puede marcarla como desistida
+      allow update: if isAdmin() || (isApproved() && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'actualizado', 'historial'])
+        && request.resource.data.estado == 'desistida');
+      allow delete: if isAdmin();
+    }
+  }
+}
