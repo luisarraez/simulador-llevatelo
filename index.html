@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3rqDaWsIYwm4gQ+7rvIFKI2/Ix1SkV4vKhbyua05mF8=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-lHbYm+90AEOsri8kbZX3SLikFqCGen7idwH7wwLxD3s=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Simulador Llévatelo</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -689,8 +689,11 @@ $('signupForm').addEventListener('submit', async e => { e.preventDefault(); msg(
     if (err && err.code === 'auth/email-already-in-use'){
       /* La cuenta ya existe (p. ej. se registró y no terminó los datos de la empresa): si la contraseña coincide, entra y sigue donde quedó */
       try { await auth.signInWithEmailAndPassword(em, pw); return; } catch(e2) {}
+      /* Otra clave: le enviamos el enlace para poner la clave nueva (así se confirma que el correo es suyo) */
+      let sent = false; try { await auth.sendPasswordResetEmail(em); sent = true; } catch(e3) {}
       document.querySelector('.authtabs button[data-a=login]').click(); $('liEmail').value = em; $('liPass').value = '';
-      msg('liMsg', 'Ese correo ya tiene una cuenta creada. Entra con tu contraseña para terminar el registro, o pulsa “¿Olvidaste tu contraseña?” para crear una nueva.');
+      msg('liMsg', sent ? 'Ese correo ya tiene una cuenta. Te enviamos un correo a ' + em + ' para que pongas tu nueva clave (revisa también spam). Después entra aquí con esa clave y sigue donde quedaste.'
+                        : 'Ese correo ya tiene una cuenta creada. Entra con tu contraseña o pulsa “¿Olvidaste tu contraseña?” para crear una nueva.', sent);
       $('liPass').focus(); return;
     }
     msg('suMsg', errText(err)); } });
