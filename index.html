@@ -3,10 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KrtFFGWfSaonQyMIC971JlN7OjnkvIBtJ9vsJxL57h4=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Simulador Llévatelo</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -855,11 +858,21 @@ $('adList').addEventListener('click', async e => { const b = e.target.closest('[
   try { await db.collection('admins').doc(id).delete(); } catch(err){ msg('adMsg', errText(err)); } });
 
 /* ---------- arranque ---------- */
+const RECAPTCHA_KEY = '';
+const IDLE_MS = 2 * 60 * 60 * 1000; /* cierre de sesión tras 2 horas sin actividad */
+const touch = () => { try { localStorage.setItem('llv-act', String(Date.now())); } catch(e) {} };
+const idleTooLong = () => { try { const t = +localStorage.getItem('llv-act'); return t > 0 && Date.now() - t > IDLE_MS; } catch(e) { return false; } };
+let lastTouch = 0;
+for (const ev of ['pointerdown', 'keydown', 'scroll', 'touchstart']) addEventListener(ev, () => { const n = Date.now(); if (n - lastTouch > 30000){ lastTouch = n; touch(); } }, {passive: true});
+setInterval(() => { if (auth && auth.currentUser && idleTooLong()){ auth.signOut().then(() => msg('liMsg', 'Por seguridad cerramos tu sesión tras 2 horas sin actividad.', true)); } }, 60000);
 function boot(){
+  if (window.top !== window.self){ document.body.innerHTML = '<p style="padding:40px;font:16px sans-serif">Por seguridad, abre esta página directamente en <b>aliadosllevatelo.com</b>.</p>'; return; }
   if (!(window.firebase && firebase.initializeApp)){ show('v-wait'); $('waitBox').innerHTML = '<h2>No se pudo cargar</h2><p class="lead">Revisa tu conexión a internet y recarga la página.</p>'; return; }
-  firebase.initializeApp(FB); auth = firebase.auth(); db = firebase.firestore(); TS = () => firebase.firestore.FieldValue.serverTimestamp();
+  firebase.initializeApp(FB);
+  if (RECAPTCHA_KEY && !RECAPTCHA_KEY.startsWith('__') && firebase.appCheck){ try { firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_KEY), true); } catch(e) {} }
+  auth = firebase.auth(); db = firebase.firestore(); TS = () => firebase.firestore.FieldValue.serverTimestamp();
   auth.languageCode = 'es';
-  auth.onAuthStateChanged(onUser);
+  auth.onAuthStateChanged(u => { if (u && idleTooLong()){ auth.signOut(); return; } if (u) touch(); onUser(u); });
 }
 window.__llv = {calc, inicialDesde, buildPdf, st, U};
 update();
