@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-gRD0eUIL1lqsLHJGpFJrZv1ox5oS+B2bDPDmchfof04=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ZHVBO40ZaIQMmqjcWqUXHgjIdITqoGfZafWmQ7Z9qx8=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Simulador Llévatelo</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -869,7 +869,7 @@ function boot(){
   if (window.top !== window.self){ document.body.innerHTML = '<p style="padding:40px;font:16px sans-serif">Por seguridad, abre esta página directamente en <b>aliadosllevatelo.com</b>.</p>'; return; }
   if (!(window.firebase && firebase.initializeApp)){ show('v-wait'); $('waitBox').innerHTML = '<h2>No se pudo cargar</h2><p class="lead">Revisa tu conexión a internet y recarga la página.</p>'; return; }
   firebase.initializeApp(FB);
-  if (RECAPTCHA_KEY && !RECAPTCHA_KEY.startsWith('__') && firebase.appCheck){ try { firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_KEY), true); } catch(e) {} }
+  if (RECAPTCHA_KEY && !RECAPTCHA_KEY.startsWith('__') && firebase.appCheck){ try { firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(RECAPTCHA_KEY), true); } catch(e) {} }
   auth = firebase.auth(); db = firebase.firestore(); TS = () => firebase.firestore.FieldValue.serverTimestamp();
   auth.languageCode = 'es';
   auth.onAuthStateChanged(u => { if (u && idleTooLong()){ auth.signOut(); return; } if (u) touch(); onUser(u); });
