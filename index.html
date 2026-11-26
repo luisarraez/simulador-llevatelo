@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KrtFFGWfSaonQyMIC971JlN7OjnkvIBtJ9vsJxL57h4=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-gRD0eUIL1lqsLHJGpFJrZv1ox5oS+B2bDPDmchfof04=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Simulador Llévatelo</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -858,7 +858,7 @@ $('adList').addEventListener('click', async e => { const b = e.target.closest('[
   try { await db.collection('admins').doc(id).delete(); } catch(err){ msg('adMsg', errText(err)); } });
 
 /* ---------- arranque ---------- */
-const RECAPTCHA_KEY = '';
+const RECAPTCHA_KEY = '6LdawzIuAAAAAGfCZKudFdvDKSEngW-L7DWaUQIL';
 const IDLE_MS = 2 * 60 * 60 * 1000; /* cierre de sesión tras 2 horas sin actividad */
 const touch = () => { try { localStorage.setItem('llv-act', String(Date.now())); } catch(e) {} };
 const idleTooLong = () => { try { const t = +localStorage.getItem('llv-act'); return t > 0 && Date.now() - t > IDLE_MS; } catch(e) { return false; } };
