@@ -18,6 +18,8 @@ service cloud.firestore {
     function req(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
     function money(v) { return v is number && v >= 0 && v < 10000000; }
     function onlyKeys(d, keys) { return d.keys().hasOnly(keys); }
+    function validMontos(m) { return m is map && m.keys().hasAll(['vida', 'vehiculo', 'gpsInst', 'notaria', 'transito', 'grua', 'segDef']) && onlyKeys(m, ['vida', 'vehiculo', 'gpsInst', 'notaria', 'transito', 'grua', 'segDef'])
+      && money(m.vida) && money(m.vehiculo) && money(m.gpsInst) && money(m.notaria) && money(m.transito) && money(m.grua) && m.segDef is bool; }
     function estadosProp() { return ['enviada', 'en_evaluacion', 'aprobada', 'rechazada', 'desistida']; }
     function validHistEntry(h) { return h is map && h.keys().hasAll(['estado', 'fecha', 'por']) && h.estado in estadosProp() && str(h.fecha, 40) && str(h.por, 200) && (!('nota' in h) || str(h.nota, 500)); }
 
@@ -52,9 +54,9 @@ service cloud.firestore {
     match /propuestas/{id} {
       allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
       allow create: if (isApproved() || isAdmin())
-        && onlyKeys(request.resource.data, ['uid', 'email', 'concesionario', 'asesor', 'cliente', 'vehiculo', 'cond', 'km', 'comentario', 'precio', 'disponible', 'inicial', 'financiado', 'plazo', 'cuota', 'corte', 'estado', 'notaLlevatelo', 'historial', 'creado', 'actualizado'])
+        && onlyKeys(request.resource.data, ['uid', 'email', 'concesionario', 'asesor', 'cliente', 'vehiculo', 'cond', 'km', 'comentario', 'precio', 'disponible', 'inicial', 'financiado', 'plazo', 'cuota', 'corte', 'estado', 'notaLlevatelo', 'historial', 'creado', 'actualizado', 'montos'])
         && request.resource.data.uid == request.auth.uid && request.resource.data.email == request.auth.token.email
-        && (isAdmin() || request.resource.data.concesionario == dealerDoc().data.nombre)
+        && (!('montos' in request.resource.data) || validMontos(request.resource.data.montos))
         && req(request.resource.data.concesionario, 100) && str(request.resource.data.asesor, 100)
         && request.resource.data.cliente is map && onlyKeys(request.resource.data.cliente, ['nombre', 'cedula', 'telefono'])
         && req(request.resource.data.cliente.nombre, 120) && req(request.resource.data.cliente.cedula, 30) && req(request.resource.data.cliente.telefono, 40)
