@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ZHVBO40ZaIQMmqjcWqUXHgjIdITqoGfZafWmQ7Z9qx8=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3rqDaWsIYwm4gQ+7rvIFKI2/Ix1SkV4vKhbyua05mF8=' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://www.google.com https://www.recaptcha.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://www.google.com https://www.recaptcha.net https://llevatelo-aliados.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Simulador Llévatelo</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -684,7 +684,16 @@ $('loginForm').addEventListener('submit', async e => { e.preventDefault(); msg('
 $('signupForm').addEventListener('submit', async e => { e.preventDefault(); msg('suMsg');
   const em = $('suEmail').value.trim(), pw = $('suPass').value, pw2 = $('suPass2').value;
   if (!em) return msg('suMsg', 'Escribe tu correo.'); if (pw.length < 8) return msg('suMsg', 'La contraseña debe tener al menos 8 caracteres.'); if (pw !== pw2) return msg('suMsg', 'Las contraseñas no coinciden.');
-  try { const c = await auth.createUserWithEmailAndPassword(em, pw); try { await c.user.sendEmailVerification(); } catch(x) {} } catch(err){ msg('suMsg', errText(err)); } });
+  try { const c = await auth.createUserWithEmailAndPassword(em, pw); try { await c.user.sendEmailVerification(); } catch(x) {} }
+  catch(err){
+    if (err && err.code === 'auth/email-already-in-use'){
+      /* La cuenta ya existe (p. ej. se registró y no terminó los datos de la empresa): si la contraseña coincide, entra y sigue donde quedó */
+      try { await auth.signInWithEmailAndPassword(em, pw); return; } catch(e2) {}
+      document.querySelector('.authtabs button[data-a=login]').click(); $('liEmail').value = em; $('liPass').value = '';
+      msg('liMsg', 'Ese correo ya tiene una cuenta creada. Entra con tu contraseña para terminar el registro, o pulsa “¿Olvidaste tu contraseña?” para crear una nueva.');
+      $('liPass').focus(); return;
+    }
+    msg('suMsg', errText(err)); } });
 $('forgotBtn').addEventListener('click', async () => { const em = $('liEmail').value.trim(); if (!em){ msg('liMsg', 'Escribe tu correo arriba y vuelve a pulsar “¿Olvidaste tu contraseña?”.'); return; }
   try { await auth.sendPasswordResetEmail(em); msg('liMsg', 'Te enviamos un correo para crear una nueva contraseña.', true); } catch(err){ msg('liMsg', errText(err)); } });
 $('logoutBtn').addEventListener('click', () => auth.signOut());
